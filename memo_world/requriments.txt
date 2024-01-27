@@ -1,0 +1,4 @@
+!pip install praw
+!pip install gTTS
+!pip install pydub
+!pip install pandas

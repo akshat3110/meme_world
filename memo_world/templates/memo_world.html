@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme World</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(to bottom, #4285f4, #34a853);
+            background-size: cover;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        header {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        label {
+            color: #000; /* Black color for labels */
+        }
+
+        input, button {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-size: 1em;
+            color: #333;
+        }
+
+        #result {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .video-container {
+            width: calc(20% - 20px);
+            margin: 10px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        video, audio {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .loading-spinner {
+            position: absolute;
+            top: 90%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #111;
+            font-size: 1.8em;
+        }
+        
+
+        h2 {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2em;
+        }
+
+        .error-message {
+            text-align: center;
+            color: #111;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+                                                                                                                                                            
+        select, input, button {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .checkbox-container {
+            margin-bottom: 10px;
+        }
+
+        .checkbox-label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-options label {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-options input {
+            margin-right: 5px;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .dropdown-content label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .checkbox-options {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .checkbox-options li {
+            margin-bottom: 5px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <header>Meme World</header>
+
+    <form id="memeForm">
+        <label for="memeName">Meme Name/Topic:</label>
+        <input type="text" id="memeName" required>
+
+        <label for="numPosts">Number of Posts:</label>
+        <input type="number" id="numPosts" min="1" required>
+
+        <!-- New multiple select for sorting -->
+        <div class="checkbox-container">
+            <label class="checkbox-label">Sorting Options:</label>
+            <ul class="checkbox-options">
+                <li><label><input type="checkbox" value="top"> Top</label></li>
+                <li><label><input type="checkbox" value="hot"> Hot</label></li>
+                <li><label><input type="checkbox" value="relevance"> Relevance</label></li>
+            </ul>
+        </div>
+
+        <div class="checkbox-container">
+            <label class="checkbox-label">Time Range:</label>
+            <select id="timeRange">
+                <option value="all">All</option>
+                <option value="day">Day</option>
+                <option value="hour">Hour</option>
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+            </select>
+        </div>
+
+        <button type="button" onclick="fetchMemes()">Fetch Memes</button>
+    </form>
+
+
+
+    <div id="result"></div>
+
+    <script>
+
+        function addVideoToCategory(videoCategories, category, videoUrl) {
+            if (!videoCategories[category]) {
+                videoCategories[category] = [];
+            }
+            videoCategories[category].push(videoUrl);
+        }
+        
+        function displayVideo(parentElement, videoUrl) {
+            const videoContainer = document.createElement('div');
+            videoContainer.classList.add('video-container');
+    
+            const videoElement = document.createElement('video');
+            videoElement.src = `/final_videos/${videoUrl}`;
+            videoElement.controls = true;
+            videoElement.preload = 'metadata';
+            videoElement.muted = true;
+    
+            videoContainer.appendChild(videoElement);
+            parentElement.appendChild(videoContainer);
+        }
+
+        
+        function displayAudio(parentElement, audioUrl) {
+            const audioContainer = document.createElement('div');
+            audioContainer.classList.add('video-container');
+
+            const audioElement = document.createElement('audio');
+            audioElement.src = `/final_videos/${audioUrl}`;
+            audioElement.controls = true;
+
+            audioContainer.appendChild(audioElement);
+            parentElement.appendChild(audioContainer);
+        }
+
+        async function fetchMemes() {
+            const memeName = document.getElementById('memeName').value;
+            const numPosts = document.getElementById('numPosts').value;
+            const sortingOptions = Array.from(document.querySelectorAll('.checkbox-options input:checked')).map(checkbox => checkbox.value);
+            const timeRange = document.getElementById('timeRange').value;
+
+            const resultDiv = document.getElementById('result');
+            const loadingSpinner = document.createElement('div');
+            loadingSpinner.classList.add('loading-spinner');
+            loadingSpinner.innerText = 'Loading...';
+        
+            // Append loading spinner to resultDiv
+            resultDiv.innerHTML = '';
+            resultDiv.appendChild(loadingSpinner);
+        
+            try {
+                const response = await fetch(`/api/memes?memeName=${memeName}&numPosts=${numPosts}&sorting=${sortingOptions.join(',')}&timeRange=${timeRange}`);
+                const responseData = await response.json();
+
+                console.log('Response Data:', responseData);
+
+                if (!Array.isArray(responseData)) {
+                    throw new Error('Invalid response data format.');
+                }
+
+                resultDiv.innerHTML = '';
+
+                resultDiv.innerHTML += '<h2>Meme Videos</h2>';
+
+                const videoCategories = {
+                    'output': [],
+                    'full_video': [],
+                    'audio': [],
+                    'other': []
+                };
+
+                responseData.forEach((videoUrl, index) => {
+                    const filename = videoUrl.toLowerCase();
+
+                    if (filename.includes('output')) {
+                        addVideoToCategory(videoCategories, 'output', videoUrl);
+                    } else if (filename.startsWith('final_video')) {
+                        addVideoToCategory(videoCategories, 'full_video', videoUrl);
+                    } else if (filename.includes('audio')) {
+                        addVideoToCategory(videoCategories, 'audio', videoUrl);
+                    } else {
+                        addVideoToCategory(videoCategories, 'other', videoUrl);
+                    }
+                });
+
+                if (videoCategories['output'].length > 0) {
+                    resultDiv.innerHTML += '<h2>Final Output</h2>';
+                    videoCategories['output'].forEach(videoUrl => {
+                        displayVideo(resultDiv, videoUrl);
+                    });
+                }
+
+                if (videoCategories['full_video'].length > 0) {
+                    resultDiv.innerHTML += '<h2>Full Videos</h2>';
+                    videoCategories['full_video'].forEach(videoUrl => {
+                        displayVideo(resultDiv, videoUrl);
+                    });
+                }
+
+                if (videoCategories['audio'].length > 0) {
+                    resultDiv.innerHTML += '<h2>Audio</h2>';
+                    videoCategories['audio'].forEach(audioUrl => {
+                        displayAudio(resultDiv, audioUrl);
+                    });
+                }
+
+                if (videoCategories['other'].length > 0) {
+                    resultDiv.innerHTML += '<h2>Videos</h2>';
+                    videoCategories['other'].forEach(otherUrl => {
+                        displayVideo(resultDiv, otherUrl);
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="error-message">${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
